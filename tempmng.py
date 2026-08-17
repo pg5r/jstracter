@@ -3,8 +3,11 @@ from colorama import init, Fore
 
 init(autoreset=True)
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+TEMP_DIR = os.path.join(BASE_DIR, "temp_js")
+
 def make_file(path: str, txt: str):
-    if not os.path.isdir("temp_js"):
+    if not os.path.isdir(TEMP_DIR):
         print(Fore.RED + "\n[JSDEBUG] FATAL ERROR: temp_js/ not found.")
         return False
 
@@ -13,7 +16,7 @@ def make_file(path: str, txt: str):
     return True
     
 def del_file(path: str):
-    if not os.path.isdir("temp_js"):
+    if not os.path.isdir(TEMP_DIR):
         print(Fore.RED + "\n[JSDEBUG] FATAL ERROR: temp_js/ not found.")
         return False
 
@@ -21,7 +24,7 @@ def del_file(path: str):
     return True
 
 def clear_temp_js():
-    temp_dir = "temp_js"
+    temp_dir = TEMP_DIR
 
     if not os.path.isdir(temp_dir):
         print(Fore.RED + "\n[JSDEBUG] FATAL ERROR: temp_js/ not found.")
