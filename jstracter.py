@@ -7,7 +7,7 @@ import crawler
 import extracter
 import shutil
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.realpath(__file__))
 TEMP_DIR = os.path.join(BASE_DIR, "temp_js")
 
 header = r"""
