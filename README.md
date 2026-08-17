@@ -15,7 +15,7 @@ JStracter is a CLI tool that crawls websites and extracts external and inline Ja
 
 ## Installation
 
-git clone <repository-url>
+git clone https://github.com/pg5r/jstracter.git
 cd jstracter
 pip install -r requirements.txt
 
