@@ -5,6 +5,9 @@ import crawler
 import extracter
 import shutil
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+TEMP_DIR = os.path.join(BASE_DIR, "temp_js")
+
 header = r"""
       _     _                  _            
      | |___| |_ _ __ __ _  ___| |_ ___ _ __ 
@@ -116,16 +119,16 @@ def start():
     inline = not args.no_inline
     major = args.major
 
-    if not os.path.isfile("extracter.py"):
+    if not os.path.isfile(os.path.join(BASE_DIR, "extracter.py")):
         print(Fore.RED + f"\n[JSDEBUG] FATAL ERROR: file 'extracter.py' not found.")
         return
-    if not os.path.isfile("crawler.py"):
+    if not os.path.isfile(os.path.join(BASE_DIR, "crawler.py")):
         print(Fore.RED + f"\n[JSDEBUG] FATAL ERROR: file 'crawler.py' not found.")
         return
-    if not os.path.isfile("tempmng.py"):
+    if not os.path.isfile(os.path.join(BASE_DIR, "tempmng.py")):
         print(Fore.RED + f"\n[JSDEBUG] FATAL ERROR: file 'tempmng.py' not found.")
         return
-    if not os.path.isdir("temp_js"):
+    if not os.path.isdir(TEMP_DIR):
         print(Fore.RED + f"\n[JSDEBUG] FATAL ERROR: folder 'temp_js/' not found.")
         return
 
@@ -154,8 +157,8 @@ def start():
 
         os.makedirs(parent, exist_ok=True)
 
-        shutil.move("temp_js", output_path)
-        os.mkdir("temp_js")
+        shutil.move(TEMP_DIR, output_path)
+        os.mkdir(TEMP_DIR)
 
     except Exception as e:
         print(Fore.RED + f"\n[JSDEBUG] FATAL ERROR: failed to make the output folder: {e}")
