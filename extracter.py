@@ -6,7 +6,7 @@ import time
 import os
 import tempmng
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.realpath(__file__))
 TEMP_DIR = os.path.join(BASE_DIR, "temp_js")
 
 init(autoreset=5)
