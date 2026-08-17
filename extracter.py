@@ -6,6 +6,9 @@ import time
 import os
 import tempmng
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+TEMP_DIR = os.path.join(BASE_DIR, "temp_js")
+
 init(autoreset=5)
 
 def js_extracter(url: str, silent=False, inline = True):
@@ -44,7 +47,7 @@ def js_extracter(url: str, silent=False, inline = True):
             js_res.raise_for_status()
 
             filename = f"script_{num}.js"
-            path = os.path.join("temp_js", filename)
+            path = os.path.join(TEMP_DIR, filename)
 
             res = tempmng.make_file(path=path, txt=js_res.text)
 
@@ -62,7 +65,7 @@ def js_extracter(url: str, silent=False, inline = True):
                 continue
 
             snm = f"inline_script_{num + 1}"
-            path = os.path.join("temp_js", snm + ".js")
+            path = os.path.join(TEMP_DIR, snm + ".js")
 
             time.sleep(0.05)
             res = tempmng.make_file(path=path , txt=stxt)
