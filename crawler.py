@@ -101,11 +101,6 @@ def crawl(first: str, silent=False, inline=True, major=True, max_pages=-1):
         if first in found_urls:
             continue
 
-        if not silent:
-            print(Fore.MAGENTA + f"----------------------------------")
-            print(Fore.MAGENTA + f"[JSINFO] Crawling in: {first}")
-            print(Fore.MAGENTA + f"----------------------------------")
-
         the_root = ""
         try:
             res = requests.get(
@@ -123,6 +118,11 @@ def crawl(first: str, silent=False, inline=True, major=True, max_pages=-1):
 
         if "html" not in res.headers.get("Content-Type", "").lower():
             continue
+
+        if not silent:
+            print(Fore.MAGENTA + f"----------------------------------")
+            print(Fore.MAGENTA + f"[JSINFO] Crawling in: {first}")
+            print(Fore.MAGENTA + f"----------------------------------")
 
         found_urls.append(first)
 
