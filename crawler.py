@@ -16,22 +16,23 @@ def get_root_domain(url):
     return f"{ext.domain}.{ext.suffix}"
 
 def normalize_url(url):
-    parsed = urlparse(url)
+    parsed_url = urlparse(url)
+    scheme = parsed_url.scheme.lower()
+    domain = parsed_url.netloc.lower()
 
-    scheme = parsed.scheme.lower()
-    netloc = parsed.netloc.lower()
+    if domain.startswith("www."):
+        domain = domain[4:]
 
-    if netloc.startswith("www."):
-        netloc = netloc[4:]
+    path = parsed_url.path
 
-    path = parsed.path or "/"
+    if path == "":
+        path = "/"
 
-    if path != "/" and path.endswith("/"):
-        path = path.rstrip("/")
+    query = parsed_url.query
 
-    return f"{scheme}://{netloc}{path}" + (
-        f"?{parsed.query}" if parsed.query else ""
-    )
+    normalized_url = f"{scheme}://{domain}{path}"
+
+    return normalized_url
 
 def is_page_url(url):
     parsed = urlparse(url)
@@ -192,3 +193,4 @@ def crawl(first: str, silent=False, inline=True, major=True, max_pages=-1):
 
     return found_urls
 
+crawl("https://kraken.tech/")
