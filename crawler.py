@@ -192,5 +192,3 @@ def crawl(first: str, silent=False, inline=True, major=True, max_pages=-1):
                 max_pages -= 1
 
     return found_urls
-
-crawl("https://kraken.tech/")
