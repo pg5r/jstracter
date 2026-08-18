@@ -1,5 +1,7 @@
 # JStracter
 
+![Jstracter](images/image.png)
+
 JStracter is a CLI tool that crawls websites and extracts external and inline JavaScript files.
 
 ## Features
