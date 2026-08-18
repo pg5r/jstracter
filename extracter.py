@@ -1,194 +1,93 @@
 import requests
-import extracter
-from colorama import init, Fore
 from bs4 import BeautifulSoup
-from urllib.parse import urljoin, urlparse
-import tldextract
-import re
+from urllib.parse import urljoin
+from colorama import init, Fore
+import time
+import os
+import tempmng
+import uuid
 
-init(autoreset=True)
+BASE_DIR = os.path.dirname(os.path.realpath(__file__))
+TEMP_DIR = os.path.join(BASE_DIR, "temp_js")
 
-extract_queue = []
-found_urls = []
+init(autoreset=5)
 
-def get_root_domain(url):
-    ext = tldextract.extract(url)
-    return f"{ext.domain}.{ext.suffix}"
+def js_extracter(url: str, silent=False, inline = True):
+    if not silent:
+        print(Fore.MAGENTA + f"----------------------------------")
+        print(Fore.MAGENTA + f"[JSINFO] Extracting from: {url}")
+        print(Fore.MAGENTA + f"----------------------------------")
 
-def normalize_url(url):
-    parsed_url = urlparse(url)
-    scheme = parsed_url.scheme.lower()
-    domain = parsed_url.netloc.lower()
-
-    if domain.startswith("www."):
-        domain = domain[4:]
-
-    path = parsed_url.path
-
-    if path == "":
-        path = "/"
-
-    query = parsed_url.query
-
-    normalized_url = f"{scheme}://{domain}{path}"
-
-    return normalized_url
-
-def is_page_url(url):
-    parsed = urlparse(url)
-
-    if parsed.scheme not in ("http", "https"):
-        return False
-
-    path = parsed.path.lower()
-
-    if not path:
-        return True
-
-    filename = path.rsplit("/", 1)[-1]
-
-    resource_extensions = {
-        ".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg",
-        ".ico", ".bmp", ".tif", ".tiff", ".avif", ".heic",
-        ".css", ".js", ".mjs", ".map",
-        ".woff", ".woff2", ".ttf", ".otf", ".eot",
-        ".mp3", ".wav", ".ogg", ".oga", ".m4a", ".aac", ".flac",
-        ".mp4", ".webm", ".avi", ".mov", ".mkv", ".m4v",
-        ".mpeg", ".mpg", ".3gp",
-        ".pdf", ".doc", ".docx", ".xls", ".xlsx",
-        ".ppt", ".pptx", ".odt", ".ods", ".odp",
-        ".rtf", ".txt", ".csv",
-        ".zip", ".rar", ".7z", ".tar", ".gz", ".bz2",
-        ".xz", ".tgz",
-        ".exe", ".msi", ".bin", ".dmg", ".iso",
-        ".apk", ".deb", ".rpm",
-        ".xml", ".rss", ".atom", ".json", ".webmanifest",
-        ".wasm", ".swf", ".cer", ".crt", ".pem"
-    }
-
-    if filename.endswith(tuple(resource_extensions)):
-        return False
-
-    resource_names = {
-        "favicon",
-        "favicon.ico",
-        "robots.txt",
-        "sitemap.xml",
-        "manifest.json",
-        "browserconfig.xml",
-        "crossdomain.xml",
-        "apple-touch-icon.png"
-    }
-
-    if filename in resource_names:
-        return False
-
-    return True
-
-def crawl(first: str, silent=False, inline=True, major=True, max_pages=-1):
-    global found_urls
-    global extract_queue
-
-    found_urls = []
-
-    first = normalize_url(first)
-
-    extract_queue.append(first)
-
-    while extract_queue:
-            
-        first = normalize_url(extract_queue.pop(0))
-
-        if first in found_urls:
-            continue
-
-        the_root = ""
-        try:
-            res = requests.get(
-            first,
+    try:
+        res = requests.get(
+            url,
             timeout=10,
             headers={"User-Agent": "Mozilla/5.0"},
             allow_redirects=True
         )
-        except Exception as e:
-            print(Fore.RED + f"\n[JSDEBUG] Failed to Fetch {first} : {e}")
-            continue
-        
-        if res.status_code >= 400:
-            continue
+    except Exception as e:
+        print(Fore.RED + f"\n[JSDEBUG] Failed to Fetch {url} : {e}")
+        return
+    
+    if not silent:
+        print("\n" + Fore.GREEN + f"[JSTATUS] STATUS CODE: {res.status_code}" + "\n")
+    res.raise_for_status()
 
-        if "html" not in res.headers.get("Content-Type", "").lower():
-            continue
+    soup = BeautifulSoup(res.text, "html.parser")
 
-        if not silent:
-            print(Fore.MAGENTA + f"----------------------------------")
-            print(Fore.MAGENTA + f"[JSINFO] Crawling in: {first}")
-            print(Fore.MAGENTA + f"----------------------------------")
+    js_urls = []
 
-        found_urls.append(first)
+    for script in soup.find_all("script", src=True):
+        js_url = urljoin(url, script["src"])
+        if js_url not in js_urls:
+            js_urls.append(js_url)
 
-        rtxt = res.text
+    for num, js_url in enumerate(js_urls, 1):
+        try:
+            js_res = requests.get(js_url, timeout=10)
+            js_res.raise_for_status()
 
-        if major:
-            the_root = get_root_domain(first)
-        else:
-            parsed = urlparse(first)
-            the_root = f"{parsed.scheme}://{parsed.netloc}"
+            filename = ""
+            path = ""
+            filename = f"script_{uuid.uuid4()}.js"
+            path = os.path.join(TEMP_DIR, filename)
+            while os.path.exists(path):
+                filename = f"script_{uuid.uuid4()}.js"
+                path = os.path.join(TEMP_DIR, filename)
 
-        raw_urls = []
+            res = tempmng.make_file(path=path, txt=js_res.text)
 
-        soup = BeautifulSoup(rtxt, "html.parser")
+            if res and not silent:
+                print(Fore.CYAN + f"[JSTRACTER JS] Saved: {path}")
 
-        for tag in soup.find_all(True):
-            for attr, value in tag.attrs.items():
-                if not isinstance(value, str):
-                    continue
+        except requests.RequestException as e:
+            print(Fore.RED + f"[JSDEBUG] Failed to download {js_url}: {e}")
 
-                if attr.lower() in (
-                    "href", "src", "action", "formaction",
-                    "poster", "cite", "data", "url"
-                ):
-                    raw_urls.append(value)
+    if inline:
+        for num, script in enumerate(soup.find_all("script", src=False)):
+            stxt = script.get_text()
 
-        raw_urls.extend(
-            re.findall(
-                r'''(?:"|')((?:https?://|//|/|\./|\.\./)[^"'`\s<>]+)(?:"|')''',
-                rtxt,
-                re.IGNORECASE
-            )
-        )
-
-        for raw_url in raw_urls:
-            if raw_url.startswith(("javascript:", "mailto:", "tel:", "data:", "#")):
+            if not stxt.strip():
                 continue
 
-            full_url = normalize_url(urljoin(first, raw_url))
-            parsed = urlparse(full_url)
+            filename = ""
+            path = ""
+            filename = f"inline_script_{uuid.uuid4()}.js"
+            path = os.path.join(TEMP_DIR, filename)
+            while os.path.exists(path):
+                filename = f"script_{uuid.uuid4()}.js"
+                path = os.path.join(TEMP_DIR, filename)
 
-            if parsed.scheme not in ("http", "https"):
-                continue
-
-            full_url = full_url.split("#")[0]
-
-            if major:
-                if get_root_domain(full_url) != the_root:
-                    continue
-            else:
-                if parsed.netloc != urlparse(first).netloc:
-                    continue
-
-            if not is_page_url(full_url):
-                continue
-
-            full_url = normalize_url(full_url)
-
-            if full_url not in extract_queue and not full_url in found_urls:
-                extract_queue.append(full_url)
-
-        if not max_pages == -1:
-            if max_pages == 1:
+            time.sleep(0.05)
+            res = tempmng.make_file(path=path , txt=stxt)
+            if res == False:
                 break
-            else:
-                max_pages -= 1
 
-    return found_urls
+            if not silent:
+                print(Fore.BLUE + f"[JSTRACTER INLINE] Saved inline JS: {path}")
+
+    if js_urls == [] and not silent:
+        print(Fore.RED + "\n[JSDEBUG] No URL found.")
+
+    return js_urls
+
