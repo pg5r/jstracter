@@ -27,7 +27,9 @@ pip install -r requirements.txt
 
 For a complete list of available commands and options:
 
+```bash
 python jstracter.py -h
+```
 
 ## Output
 
